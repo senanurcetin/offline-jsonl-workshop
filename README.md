@@ -41,14 +41,23 @@ Temel problem: 🚀 emojisi 1 Unicode karakteri olmasına rağmen UTF-8 ile 4 ba
 
 This workshop is independently authored example material, **not** an official Anthropic product, partnership, certification, or an Anthropic-maintained repository. The source is provided under the MIT license in `LICENSE`. No workshop has been hosted.
 
-The original development workspace contains a separate release builder (`prepare_workshop_release.py`) that packages this workshop reproducibly from an explicit allowlist. The builder is not required to use the extracted archive. The archive contains this README, bilingual runbook, sample, license, two scripts, two test modules, and a `SHA256SUMS` manifest. It excludes backups, credentials and local handoff files.
+The original development workspace contains a separate release builder (`prepare_workshop_release.py`) that packages this workshop reproducibly from an explicit allowlist. The builder is not required to use the extracted archive. The archive contains this README, bilingual runbook, sample, license, three scripts, three test modules, and a `SHA256SUMS` manifest. It excludes backups, credentials and local handoff files.
 
 After extracting the ZIP into its own directory:
 
 ~~~powershell
 py -3 -m unittest discover -p "test_*.py" -q
+py -3 verify_release.py
 py -3 red_green_demo.py
 py -3 jsonl_utf8_guard.py --input sample_events.jsonl
 ~~~
 
 Rebuilding the package with the same source bytes produces the same ZIP hash. A SHA-256 sidecar is emitted beside the ZIP. Public repository: https://github.com/senanurcetin/offline-jsonl-workshop. The reusable offline ZIP can be built locally; it is not claimed as a published GitHub Release. Git checkouts preserve source bytes for the accompanying `SHA256SUMS` manifest via `.gitattributes`.
+
+### Public repository integrity check
+
+After cloning the public repository, or extracting the offline ZIP, run `py -3 verify_release.py` in the project directory. This local, dependency-free command validates every expected file against `SHA256SUMS`. It rejects malformed, duplicate, unexpected or path-traversal manifest entries, detects changed or missing source files, and does not reveal source contents. Git's `.gitattributes` preserves the manifest-verified bytes on Windows, macOS and Linux.
+
+### Türkçe — Yayımlanan dosyaları doğrulama
+
+GitHub deposunu klonladıktan veya ZIP paketini çıkardıktan sonra proje klasöründe `py -3 verify_release.py` komutunu çalıştır. Araç, beklenen tüm kaynak dosyalarını `SHA256SUMS` ile karşılaştırır; değiştirilmiş veya eksik dosyaları, hatalı veya yinelenmiş manifest kayıtlarını ve klasör dışına erişim girişimlerini reddeder. Ek paket veya ağ bağlantısı gerekmez; dosya içeriği ekrana yazdırılmaz.

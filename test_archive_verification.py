@@ -148,5 +148,114 @@ class ArchiveVerificationTests(unittest.TestCase):
                 verify_archive(Path(tmp) / "missing.zip")
 
 
+    def test_independent_archive_sha256_match(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "ok.zip"
+            data = archive()
+            path.write_bytes(data)
+            report = verify_archive(path, expected_sha256=hashlib.sha256(data).hexdigest())
+            self.assertEqual(report["status"], "ok")
+            self.assertTrue(report["trusted_archive_sha256_verified"])
+
+    def test_wrong_trusted_digest_rejected_without_disclosure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "ok.zip"
+            path.write_bytes(archive())
+            with self.assertRaises(VerificationError) as caught:
+                verify_archive(path, expected_sha256="0" * 64)
+            self.assertIn("trusted", str(caught.exception))
+            self.assertNotIn(str(path), str(caught.exception))
+
+    def test_attacker_replaces_payload_and_embedded_manifest(self):
+        original_archive = archive()
+        digest = hashlib.sha256(original_archive).hexdigest()
+        with ZipFile(io.BytesIO(original_archive)) as original:
+            entries = [(i.filename, original.read(i)) for i in original.infolist()]
+        new_source = b'{"safe":false,"code":"secret"}\n'
+        entries = [(name, new_source if name.endswith("/sample_events.jsonl") else data)
+                   for name, data in entries]
+        manifest = "".join(
+            f"{hashlib.sha256(data).hexdigest()}  {name.removeprefix(PREFIX)}\n"
+            for name, data in sorted(entries) if not name.endswith("/SHA256SUMS")
+        ).encode("ascii")
+        entries = [(name, manifest if name.endswith("/SHA256SUMS") else data)
+                   for name, data in entries]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "attacker.zip"
+            path.write_bytes(archive(entries))
+            # Embedded manifest matches the malicious replacement's payload.
+            self.assertEqual(verify_archive(path)["status"], "ok")
+            # Independent checksum from the trusted earlier release rejects it.
+            with self.assertRaisesRegex(VerificationError, "trusted"):
+                verify_archive(path, expected_sha256=digest)
+
+    def test_invalid_trusted_digest_fails_closed(self):
+        for invalid in ("", "0" * 63, "0" * 65, "x" * 64,
+                        "A" * 64, "../etc/passwd", "0" * 64 + "\nSECRET"):
+            with self.subTest(value=invalid[:15]):
+                with tempfile.TemporaryDirectory() as tmp:
+                    path = Path(tmp) / "ok.zip"
+                    path.write_bytes(archive())
+                    with self.assertRaisesRegex(VerificationError, "trusted"):
+                        verify_archive(path, expected_sha256=invalid)
+
+    def test_cli_accepts_trusted_sha256(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "ok.zip"
+            data = archive()
+            path.write_bytes(data)
+            r = subprocess.run([
+                sys.executable, "-B", str(HERE / "verify_release.py"),
+                "--archive", str(path), "--expected-archive-sha256",
+                hashlib.sha256(data).hexdigest(),
+            ], capture_output=True, text=True, timeout=20)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertTrue(json.loads(r.stdout)["trusted_archive_sha256_verified"])
+
+    def test_cli_rejects_trusted_sha256_without_archive(self):
+        r = subprocess.run([
+            sys.executable, "-B", str(HERE / "verify_release.py"),
+            "--expected-archive-sha256", "0" * 64,
+        ], capture_output=True, text=True, timeout=20)
+        self.assertEqual(r.returncode, 2)
+        self.assertFalse(r.stdout.strip())
+
+    def test_cli_rejects_mismatched_trusted_digest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "ok.zip"
+            path.write_bytes(archive())
+            r = subprocess.run([
+                sys.executable, "-B", str(HERE / "verify_release.py"),
+                "--archive", str(path), "--expected-archive-sha256", "0" * 64,
+            ], capture_output=True, text=True, timeout=20)
+            self.assertEqual(r.returncode, 2)
+            self.assertFalse(r.stdout.strip())
+            self.assertIn("trusted", r.stderr)
+
+    def test_bounded_archive_read_with_trusted_checksum(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "ok.zip"
+            path.write_bytes(archive())
+            with patch("verify_release.MAX_ARCHIVE_BYTES", 50):
+                with self.assertRaisesRegex(VerificationError, "size"):
+                    verify_archive(path, expected_sha256="0" * 64)
+
+
+    def test_trusted_archive_reader_never_uses_unbounded_read_bytes(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "ok.zip"
+            blob = archive()
+            path.write_bytes(blob)
+            digest = hashlib.sha256(blob).hexdigest()
+            with patch.object(
+                Path, "read_bytes",
+                side_effect=AssertionError("unbounded read_bytes must not run"),
+            ):
+                result = verify_archive(path, expected_sha256=digest)
+            self.assertTrue(result["trusted_archive_sha256_verified"])
+
+
 if __name__ == "__main__":
     unittest.main()

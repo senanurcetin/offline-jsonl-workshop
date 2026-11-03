@@ -5,15 +5,21 @@ import hashlib
 import io
 import json
 import stat
-import warnings
+import struct
 import subprocess
 import sys
 import tempfile
 import unittest
+import warnings
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
+from zipfile import ZIP_DEFLATED, ZIP_LZMA, ZipFile, ZipInfo
 
-from verify_release import FILES, VerificationError, verify_archive, read_trusted_sha256_sidecar
+from verify_release import (
+    FILES,
+    VerificationError,
+    read_trusted_sha256_sidecar,
+    verify_archive,
+)
 
 HERE = Path(__file__).resolve().parent
 PREFIX = "offline-jsonl-workshop/"
@@ -133,6 +139,68 @@ class ArchiveVerificationTests(unittest.TestCase):
             path.write_bytes(archive(entries))
             with self.assertRaisesRegex(VerificationError, "size"):
                 verify_archive(path)
+
+    def test_corrupted_deflate_data_has_controlled_verification_failure(self):
+        """An invalid compressed member must not crash the verifier CLI."""
+        payload = bytearray(archive())
+        with ZipFile(io.BytesIO(payload)) as z:
+            member = z.getinfo(PREFIX + "README.md")
+            self.assertEqual(member.compress_type, ZIP_DEFLATED)
+            name_size, extra_size = struct.unpack_from(
+                "<HH", payload, member.header_offset + 26
+            )
+            compressed_start = member.header_offset + 30 + name_size + extra_size
+        # DEFLATE block type 0b11 is reserved/invalid. Keep ZIP directory
+        # metadata intact to exercise the member decompressor.
+        payload[compressed_start] |= 0x06
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "invalid-deflate.zip"
+            path.write_bytes(payload)
+            with self.assertRaisesRegex(VerificationError, "cannot be verified"):
+                verify_archive(path)
+
+            result = subprocess.run(
+                [sys.executable, "-B", str(HERE / "verify_release.py"),
+                 "--archive", str(path)],
+                check=False, capture_output=True, text=True, timeout=20,
+            )
+            self.assertEqual(result.returncode, 2, result.stderr)
+            self.assertIn("Verification failed:", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+
+    def test_corrupted_lzma_data_has_controlled_verification_failure(self):
+        """An invalid LZMA stream must fail with the same safe CLI response."""
+        with ZipFile(io.BytesIO(archive())) as original:
+            entries = [(i.filename, original.read(i)) for i in original.infolist()]
+        out = io.BytesIO()
+        with ZipFile(out, "w") as z:
+            for name, data in entries:
+                method = ZIP_LZMA if name == PREFIX + "README.md" else ZIP_DEFLATED
+                z.writestr(name, data, compress_type=method)
+        payload = bytearray(out.getvalue())
+        with ZipFile(io.BytesIO(payload)) as z:
+            member = z.getinfo(PREFIX + "README.md")
+            self.assertEqual(member.compress_type, ZIP_LZMA)
+            name_size, extra_size = struct.unpack_from(
+                "<HH", payload, member.header_offset + 26
+            )
+            compressed_start = member.header_offset + 30 + name_size + extra_size
+        # Damage the LZMA properties header, leaving ZIP metadata intact.
+        payload[compressed_start + 2] ^= 0xFF
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "invalid-lzma.zip"
+            path.write_bytes(payload)
+            with self.assertRaisesRegex(VerificationError, "cannot be verified"):
+                verify_archive(path)
+
+            result = subprocess.run(
+                [sys.executable, "-B", str(HERE / "verify_release.py"),
+                 "--archive", str(path)],
+                check=False, capture_output=True, text=True, timeout=20,
+            )
+            self.assertEqual(result.returncode, 2, result.stderr)
+            self.assertIn("Verification failed:", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
 
     def test_corrupt_and_non_zip_input_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:

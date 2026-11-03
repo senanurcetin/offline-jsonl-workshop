@@ -11,9 +11,11 @@ import hashlib
 import hmac
 import io
 import json
+import lzma
 import re
 import stat
 import sys
+import zlib
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 
@@ -148,7 +150,7 @@ def verify_archive(
                 actual = hashlib.sha256(data[filename]).hexdigest()
                 if actual != expected_hash:
                     raise VerificationError(f"Source checksum mismatch: {filename}")
-    except (BadZipFile, RuntimeError, EOFError, OSError, NotImplementedError) as exc:
+    except (BadZipFile, RuntimeError, EOFError, OSError, NotImplementedError, zlib.error, lzma.LZMAError) as exc:
         raise VerificationError("ZIP archive cannot be verified") from exc
     result: dict[str, object] = {"status": "ok", "files": len(FILES), "manifest": MANIFEST}
     if expected_sha256 is not None:

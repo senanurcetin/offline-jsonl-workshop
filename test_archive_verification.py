@@ -13,7 +13,7 @@ import unittest
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
-from verify_release import FILES, VerificationError, verify_archive
+from verify_release import FILES, VerificationError, verify_archive, read_trusted_sha256_sidecar
 
 HERE = Path(__file__).resolve().parent
 PREFIX = "offline-jsonl-workshop/"
@@ -256,6 +256,65 @@ class ArchiveVerificationTests(unittest.TestCase):
                 result = verify_archive(path, expected_sha256=digest)
             self.assertTrue(result["trusted_archive_sha256_verified"])
 
+
+    def test_trusted_sidecar_matches_builder_format(self):
+        with tempfile.TemporaryDirectory() as folder:
+            bundle = Path(folder) / "demo.zip"
+            data = archive()
+            bundle.write_bytes(data)
+            checksum = Path(folder) / "demo.zip.sha256"
+            checksum.write_text(hashlib.sha256(data).hexdigest() + "  demo.zip\n", encoding="ascii")
+            expected = read_trusted_sha256_sidecar(checksum, bundle)
+            self.assertEqual(expected, hashlib.sha256(data).hexdigest())
+            self.assertTrue(verify_archive(bundle, expected_sha256=expected)["trusted_archive_sha256_verified"])
+
+    def test_sidecar_rejects_wrong_filename(self):
+        with tempfile.TemporaryDirectory() as folder:
+            checksum = Path(folder) / "expected.sha256"
+            checksum.write_text("0" * 64 + "  other.zip\n", encoding="ascii")
+            with self.assertRaisesRegex(VerificationError, "filename"):
+                read_trusted_sha256_sidecar(checksum, Path(folder) / "demo.zip")
+
+    def test_sidecar_rejects_malformed_or_multiple_records(self):
+        bad_records = [
+            b"", b"0" * 64 + b"  demo.zip",
+            b"X" * 64 + b"  demo.zip\n",
+            b"0" * 64 + b"  demo.zip\r\r\n",
+            b"0" * 64 + b"  demo.zip\n" * 4,
+        ]
+        with tempfile.TemporaryDirectory() as folder:
+            checksum = Path(folder) / "expected.sha256"
+            for value in bad_records:
+                with self.subTest(size=len(value)):
+                    checksum.write_bytes(value)
+                    with self.assertRaises(VerificationError):
+                        read_trusted_sha256_sidecar(checksum, Path(folder) / "demo.zip")
+
+    def test_cli_uses_trusted_sidecar(self):
+        with tempfile.TemporaryDirectory() as folder:
+            bundle = Path(folder) / "demo.zip"
+            data = archive()
+            bundle.write_bytes(data)
+            checksum = Path(folder) / "demo.zip.sha256"
+            checksum.write_text(hashlib.sha256(data).hexdigest() + "  demo.zip\n", encoding="ascii")
+            r = subprocess.run([
+                sys.executable, "-B", str(HERE / "verify_release.py"),
+                "--archive", str(bundle), "--trusted-sha256-file", str(checksum),
+            ], capture_output=True, text=True, timeout=30)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertTrue(json.loads(r.stdout)["trusted_archive_sha256_verified"])
+
+    def test_sidecar_symlink_is_rejected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            real = Path(folder) / "source.sha256"
+            real.write_text("0" * 64 + "  demo.zip\n", encoding="ascii")
+            link = Path(folder) / "link.sha256"
+            try:
+                link.symlink_to(real)
+            except (OSError, NotImplementedError):
+                self.skipTest("Symlinks are unavailable")
+            with self.assertRaisesRegex(VerificationError, "unsafe"):
+                read_trusted_sha256_sidecar(link, Path(folder) / "demo.zip")
 
 if __name__ == "__main__":
     unittest.main()

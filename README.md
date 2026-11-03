@@ -121,3 +121,29 @@ içerik manifestini doğrular. Hatalı hash biçimi veya uyuşmayan değer redde
 İnternet, ücretli servis veya arşivi açıp içindeki kodu çalıştırmak gerekmez.
 ZIP ve doğrulama değeri aynı güvenilmeyen kaynaktan alındıysa işlem tek başına
 kaynağın özgünlüğünü kanıtlamaz.
+
+
+### Trusted SHA-256 sidecar file (English)
+
+A local release builder may produce a `workshop.zip.sha256` file containing
+the exact format `<64 lowercase hex digits>  workshop.zip`. When the checksum
+file comes from an **independently trusted channel**, verify the ZIP without
+copying the hash manually:
+
+```powershell
+py -3 verify_release.py --archive "offline-jsonl-workshop.zip" --trusted-sha256-file "offline-jsonl-workshop.zip.sha256"
+```
+
+The reader accepts a single LF or CRLF-terminated record, verifies the ZIP
+filename, rejects oversized or malformed checksum files and symlinks, and
+uses the same bounded archive verification. This option cannot be combined
+with `--expected-archive-sha256`. **A sidecar downloaded alongside an
+untrusted ZIP does not independently authenticate its publisher.**
+
+### Güvenilir SHA-256 yan dosyası (Türkçe)
+
+ZIP'in SHA-256 değerini içeren bir `.sha256` dosyasını **bağımsız ve güvenilir
+bir kaynaktan** aldıysanız `--trusted-sha256-file` seçeneğiyle kullanabilirsiniz.
+Araç, ZIP dosya adını ve SHA-256 biçimini denetler; Windows CRLF ve Linux LF
+satır sonlarını destekler. ZIP ile aynı güvenilmeyen kaynaktan indirilen yan
+dosya, tek başına yayıncının kimliğini kanıtlamaz.

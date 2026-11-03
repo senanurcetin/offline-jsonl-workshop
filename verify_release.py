@@ -156,6 +156,22 @@ def verify_archive(
     return result
 
 
+def read_trusted_sha256_sidecar(sidecar: Path, archive_path: Path) -> str:
+    """Parse a separately trusted sha256sum-style file for this exact ZIP."""
+    if sidecar.is_symlink() or not sidecar.is_file():
+        raise VerificationError("Trusted SHA-256 sidecar is missing or unsafe")
+    with sidecar.open("rb") as stream:
+        raw = stream.read(257)
+    if len(raw) > 256:
+        raise VerificationError("Trusted SHA-256 sidecar exceeds size limit")
+    match = re.fullmatch(rb"([0-9a-f]{64})  ([A-Za-z0-9_.-]+\.zip)\r?\n", raw)
+    if match is None:
+        raise VerificationError("Trusted SHA-256 sidecar has invalid format")
+    if match.group(2).decode("ascii") != archive_path.name:
+        raise VerificationError("Trusted SHA-256 sidecar filename mismatch")
+    return match.group(1).decode("ascii")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     source = parser.add_mutually_exclusive_group()
@@ -167,16 +183,28 @@ def main(argv: list[str] | None = None) -> int:
         "--archive", type=Path,
         help="Validate a standalone workshop ZIP without extracting it",
     )
-    parser.add_argument(
+    trusted = parser.add_mutually_exclusive_group()
+    trusted.add_argument(
         "--expected-archive-sha256", type=str,
         help="Independently trusted SHA-256 digest of the entire ZIP (requires --archive)",
     )
+    trusted.add_argument(
+        "--trusted-sha256-file", type=Path,
+        help="Explicitly trusted SHA-256 sidecar file for the ZIP (requires --archive)",
+    )
     args = parser.parse_args(argv)
-    if args.expected_archive_sha256 is not None and args.archive is None:
-        parser.error("--expected-archive-sha256 requires --archive")
+    if args.archive is None and (
+        args.expected_archive_sha256 is not None or args.trusted_sha256_file is not None
+    ):
+        parser.error("A trusted archive SHA-256 requires --archive")
     try:
+        expected_hash = args.expected_archive_sha256
+        if args.trusted_sha256_file is not None:
+            expected_hash = read_trusted_sha256_sidecar(
+                args.trusted_sha256_file, args.archive
+            )
         result = (
-            verify_archive(args.archive, expected_sha256=args.expected_archive_sha256)
+            verify_archive(args.archive, expected_sha256=expected_hash)
             if args.archive is not None
             else verify_release(args.root or Path(__file__).resolve().parent)
         )

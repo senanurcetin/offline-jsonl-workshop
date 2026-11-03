@@ -37,7 +37,7 @@ Temel problem: 🚀 emojisi 1 Unicode karakteri olmasına rağmen UTF-8 ile 4 ba
 **Durum:** Atölye içeriği geliştirilmiştir. Gerçek etkinlik, katılımcı, sponsorluk veya program kabulü iddiası yoktur.
 
 
-## Standalone public-source package (prepared; not published)
+## Public source and standalone offline package
 
 This workshop is independently authored example material, **not** an official Anthropic product, partnership, certification, or an Anthropic-maintained repository. The source is provided under the MIT license in `LICENSE`. No workshop has been hosted.
 
@@ -51,4 +51,4 @@ py -3 red_green_demo.py
 py -3 jsonl_utf8_guard.py --input sample_events.jsonl
 ~~~
 
-Rebuilding the package with the same source bytes produces the same ZIP hash. A SHA-256 sidecar is emitted beside the ZIP. A public GitHub repository has **not** been created for the release at the time of packaging.
+Rebuilding the package with the same source bytes produces the same ZIP hash. A SHA-256 sidecar is emitted beside the ZIP. Public repository: https://github.com/senanurcetin/offline-jsonl-workshop. The reusable offline ZIP can be built locally; it is not claimed as a published GitHub Release. Git checkouts preserve source bytes for the accompanying `SHA256SUMS` manifest via `.gitattributes`.

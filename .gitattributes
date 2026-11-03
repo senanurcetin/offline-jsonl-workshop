@@ -1,0 +1,7 @@
+# Preserve exact published bytes for the SHA256SUMS manifest on every OS.
+LICENSE -text
+README.md -text
+WORKSHOP_RUNBOOK_TR_EN.md -text
+*.py -text
+*.jsonl -text
+SHA256SUMS -text

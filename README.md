@@ -61,3 +61,28 @@ After cloning the public repository, or extracting the offline ZIP, run `py -3 v
 ### Türkçe — Yayımlanan dosyaları doğrulama
 
 GitHub deposunu klonladıktan veya ZIP paketini çıkardıktan sonra proje klasöründe `py -3 verify_release.py` komutunu çalıştır. Araç, beklenen tüm kaynak dosyalarını `SHA256SUMS` ile karşılaştırır; değiştirilmiş veya eksik dosyaları, hatalı veya yinelenmiş manifest kayıtlarını ve klasör dışına erişim girişimlerini reddeder. Ek paket veya ağ bağlantısı gerekmez; dosya içeriği ekrana yazdırılmaz.
+
+
+### Verify the ZIP without extracting it (English)
+
+The verifier can inspect a local workshop ZIP **without extraction**:
+
+~~~powershell
+py -3 verify_release.py --archive "path\to\offline-jsonl-workshop.zip"
+~~~
+
+This checks the exact expected members, rejects duplicate, unsafe, symlinked, encrypted, oversized or missing ZIP entries, and verifies source bytes against the bundled SHA256SUMS. It performs no network requests and does not execute archive contents.
+
+**Integrity is not authenticity:** An attacker who replaces both files *and* the included manifest could produce another self-consistent ZIP. To authenticate a download, also compare the full ZIP SHA-256 against a checksum obtained from a trusted independent channel. This repository does not claim a published ZIP release.
+
+### ZIP paketini çıkarmadan doğrula (Türkçe)
+
+Bir ZIP dosyasının içeriğini klasöre açmadan kontrol etmek için:
+
+~~~powershell
+py -3 verify_release.py --archive "path\to\offline-jsonl-workshop.zip"
+~~~
+
+Bu işlem ZIP içindeki beklenen dosyaları ve SHA256SUMS değerlerini doğrular; yinelenen, eksik, güvensiz, sembolik bağlantılı ve aşırı büyük kayıtları reddeder. Ağ bağlantısı veya ZIP içindeki kodun çalıştırılması gerekmez.
+
+**Bütünlük, kaynak kimliğini kanıtlamaz:** Dosyalarla birlikte manifest de değiştirilmişse sahte bir paket kendi içinde tutarlı görünebilir. Gerçek kaynağı doğrulamak için ZIP dosyasının SHA-256 değerini ayrıca güvenilir bir kanaldan alınan değerle karşılaştırın.

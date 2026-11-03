@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import hmac
+import io
 import json
 import re
 import stat
@@ -94,15 +96,31 @@ def verify_release(root: Path) -> dict[str, object]:
     return {"status": "ok", "files": len(FILES), "manifest": MANIFEST}
 
 
-def verify_archive(path: Path) -> dict[str, object]:
-    """Verify ZIP sources in-memory without extraction or trusting ZIP paths."""
+def verify_archive(
+    path: Path, expected_sha256: str | None = None
+) -> dict[str, object]:
+    """Verify ZIP sources and optionally a separately trusted whole-file hash."""
+    if expected_sha256 is not None and (
+        not isinstance(expected_sha256, str)
+        or re.fullmatch(r"[0-9a-f]{64}", expected_sha256) is None
+    ):
+        raise VerificationError("Invalid trusted archive SHA-256 format")
     if path.is_symlink() or not path.is_file():
         raise VerificationError("Missing or unsafe ZIP archive")
     if path.stat().st_size > MAX_ARCHIVE_BYTES:
         raise VerificationError("ZIP archive exceeds size limit")
+    # Bound source bytes and hash exactly the bytes later parsed by ZipFile.
+    with path.open("rb") as stream:
+        raw_archive = stream.read(MAX_ARCHIVE_BYTES + 1)
+    if len(raw_archive) > MAX_ARCHIVE_BYTES:
+        raise VerificationError("ZIP archive exceeds size limit")
+    if expected_sha256 is not None and not hmac.compare_digest(
+        hashlib.sha256(raw_archive).hexdigest(), expected_sha256
+    ):
+        raise VerificationError("ZIP archive does not match trusted SHA-256")
     expected = {ZIP_PREFIX + name for name in (*FILES, MANIFEST)}
     try:
-        with ZipFile(path, "r") as package:
+        with ZipFile(io.BytesIO(raw_archive), "r") as package:
             members = package.infolist()
             names = [member.filename for member in members]
             if len(names) != len(set(names)):
@@ -132,7 +150,10 @@ def verify_archive(path: Path) -> dict[str, object]:
                     raise VerificationError(f"Source checksum mismatch: {filename}")
     except (BadZipFile, RuntimeError, EOFError, OSError, NotImplementedError) as exc:
         raise VerificationError("ZIP archive cannot be verified") from exc
-    return {"status": "ok", "files": len(FILES), "manifest": MANIFEST}
+    result: dict[str, object] = {"status": "ok", "files": len(FILES), "manifest": MANIFEST}
+    if expected_sha256 is not None:
+        result["trusted_archive_sha256_verified"] = True
+    return result
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -146,10 +167,17 @@ def main(argv: list[str] | None = None) -> int:
         "--archive", type=Path,
         help="Validate a standalone workshop ZIP without extracting it",
     )
+    parser.add_argument(
+        "--expected-archive-sha256", type=str,
+        help="Independently trusted SHA-256 digest of the entire ZIP (requires --archive)",
+    )
     args = parser.parse_args(argv)
+    if args.expected_archive_sha256 is not None and args.archive is None:
+        parser.error("--expected-archive-sha256 requires --archive")
     try:
         result = (
-            verify_archive(args.archive) if args.archive is not None
+            verify_archive(args.archive, expected_sha256=args.expected_archive_sha256)
+            if args.archive is not None
             else verify_release(args.root or Path(__file__).resolve().parent)
         )
     except (VerificationError, OSError) as exc:

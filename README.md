@@ -86,3 +86,38 @@ py -3 verify_release.py --archive "path\to\offline-jsonl-workshop.zip"
 Bu işlem ZIP içindeki beklenen dosyaları ve SHA256SUMS değerlerini doğrular; yinelenen, eksik, güvensiz, sembolik bağlantılı ve aşırı büyük kayıtları reddeder. Ağ bağlantısı veya ZIP içindeki kodun çalıştırılması gerekmez.
 
 **Bütünlük, kaynak kimliğini kanıtlamaz:** Dosyalarla birlikte manifest de değiştirilmişse sahte bir paket kendi içinde tutarlı görünebilir. Gerçek kaynağı doğrulamak için ZIP dosyasının SHA-256 değerini ayrıca güvenilir bir kanaldan alınan değerle karşılaştırın.
+
+
+### Independently trusted ZIP SHA-256 (English)
+
+Checking the hash manifest inside a ZIP proves internal consistency, not
+the identity of the publisher. For stronger verification, get the **complete
+ZIP file's SHA-256** from a trusted independent channel, and pass that value
+explicitly alongside the local ZIP path:
+
+~~~powershell
+py -3 verify_release.py --archive "path\to\offline-jsonl-workshop.zip" --expected-archive-sha256 "<trusted_64_character_lowercase_sha256>"
+~~~
+
+The tool verifies the **exact bytes it subsequently parses**, then validates
+the internal allowlisted source checksums. It rejects malformed and mismatched
+trusted hashes, requires the --archive flag, and does not use an internet connection.
+A checksum supplied by the same untrusted download location does **not** by
+itself prove publisher authenticity. No release signature or externally
+trusted checksum distribution is claimed by this project.
+
+### Haricî güvenilir ZIP SHA-256 kontrolü (Türkçe)
+
+ZIP içindeki SHA256SUMS dosyasının doğrulanması, paketin yalnızca kendi
+içinde tutarlı olduğunu gösterir. Paketin tam SHA-256 değerini **bağımsız ve
+güvenilir bir kaynaktan** elde ettiğinizde bunu ayrıca kullanabilirsiniz:
+
+~~~powershell
+py -3 verify_release.py --archive "path\to\offline-jsonl-workshop.zip" --expected-archive-sha256 "<guvenilir_64_karakter_kucuk_harf_sha256>"
+~~~
+
+Bu kontrol, arşivin tüm baytlarını güvenilir değerle karşılaştırır ve ardından
+içerik manifestini doğrular. Hatalı hash biçimi veya uyuşmayan değer reddedilir.
+İnternet, ücretli servis veya arşivi açıp içindeki kodu çalıştırmak gerekmez.
+ZIP ve doğrulama değeri aynı güvenilmeyen kaynaktan alındıysa işlem tek başına
+kaynağın özgünlüğünü kanıtlamaz.

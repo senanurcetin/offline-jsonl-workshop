@@ -12,6 +12,7 @@ Only real, verifiable entries. Each row names the tool actually used. An empty t
 | 2026-11-04 | Claude Code | Pin Actions to commit SHAs, add Dependabot | [#18](https://github.com/senanurcetin/offline-jsonl-workshop/pull/18) | SHAs resolved from official repos; 6 CI jobs green with pinned actions |
 | 2026-11-04 | Claude Code | Add ruff, mypy --strict and coverage gate; untrack accidentally committed `.pyc` files (my mistake in #12) | [#21](https://github.com/senanurcetin/offline-jsonl-workshop/pull/21) | Lint and types clean, coverage 78% vs 75% floor; 7 CI jobs green |
 | 2026-11-04 | Claude Code | Add seeded boundary and property tests | [#22](https://github.com/senanurcetin/offline-jsonl-workshop/pull/22) | 73 tests; new nesting test fails on pre-#12 code (mutation check); 7 CI jobs green |
+| 2026-11-04 | Claude Code (Anthropic, model Claude Opus 5.5) | Follow-up to issue #15, requested by the repo owner: 9 seeded edge-case tests (byte limits around multibyte characters, invalid UTF-8, CR/CRLF/blank lines, `\uXXXX` escapes and surrogates, escaped duplicate keys, nesting around the recursion limit, CLI no-echo). No bug found; no runtime change | PR_LINK | 82 tests pass locally; new tests fail on three deliberately broken guard copies (no RecursionError catch, no duplicate-key check, no CR stripping); `SHA256SUMS` regenerated |
 
 ## How to add an entry
 

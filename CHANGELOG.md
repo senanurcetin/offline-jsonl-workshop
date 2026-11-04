@@ -11,6 +11,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - `docs/AI_ASSISTANCE_LOG.md` recording AI-assisted changes (#11).
 - CI `quality` job: ruff, `mypy --strict` and a 75% coverage floor (#21); Actions pinned to commit SHAs with Dependabot updates (#18, #19, #20).
 - Seeded boundary and property tests (#22).
+- Further seeded edge-case tests for issue #15: every byte limit around multibyte characters, invalid UTF-8 sequences, CR-only and mixed line endings, `\uXXXX` escapes and surrogates, escaped duplicate keys at any depth, and nesting around the recursion limit.
 
 ### Fixed
 - Byte-exact manifest preserved across Windows checkouts via `.gitattributes`.

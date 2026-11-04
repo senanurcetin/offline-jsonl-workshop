@@ -9,11 +9,16 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Cross-platform CI (Ubuntu and Windows, Python 3.10/3.12/3.13) and `AGENTS.md` (#6).
 - CLI exit-code and privacy tests (#7).
 - `docs/AI_ASSISTANCE_LOG.md` recording AI-assisted changes (#11).
+- CI `quality` job: ruff, `mypy --strict` and a 75% coverage floor (#21); Actions pinned to commit SHAs with Dependabot updates (#18, #19, #20).
+- Seeded boundary and property tests (#22).
 
 ### Fixed
 - Byte-exact manifest preserved across Windows checkouts via `.gitattributes`.
 - Corrupted DEFLATE and LZMA ZIP streams are handled (#5).
 - Deeply nested JSON no longer crashes the validator with an uncaught `RecursionError`; it is reported as a validation error (exit 2) (#12).
+
+### Changed
+- Removed accidentally committed `__pycache__/*.pyc` files and added `.gitignore` (#21).
 
 ### Documentation
 - Bilingual (TR/EN) JSONL UTF-8 validation workshop, runbook, contributor onboarding (#4) and security policy.

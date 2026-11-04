@@ -6,6 +6,15 @@ A small original, dependency-free, offline Python example showing how Unicode ch
 
 Requirements: Python 3.10+; no cloud, API keys, paid services, or extra packages.
 
+Install the validator from PyPI as a command-line tool (no runtime dependencies):
+
+~~~sh
+pip install jsonl-utf8-guard
+jsonl-utf8-guard --input sample_events.jsonl
+~~~
+
+Or run it from a clone, without installing anything:
+
 Run from this directory:
 
 ~~~powershell
@@ -23,6 +32,15 @@ Security and scope: No network requests, code execution of user JSON, original-c
 ## Türkçe
 
 Gereksinimler: Python 3.10+; hesap, bulut, API anahtarı veya ek paket gerekmez.
+
+Doğrulayıcıyı PyPI'den komut satırı aracı olarak kurabilirsiniz (çalışma zamanı bağımlılığı yoktur):
+
+~~~sh
+pip install jsonl-utf8-guard
+jsonl-utf8-guard --input sample_events.jsonl
+~~~
+
+Ya da hiçbir şey kurmadan klonlanmış depodan çalıştırın:
 
 ~~~powershell
 py -3 jsonl_utf8_guard.py --input sample_events.jsonl

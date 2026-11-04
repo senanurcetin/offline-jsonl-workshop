@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import io
 import json
+import random
 import subprocess
 import sys
 import unittest
@@ -121,6 +122,56 @@ class UTF8GuardTests(unittest.TestCase):
             count_jsonl(io.BytesIO(payload))
         self.assertIn("Line 1", str(ctx.exception))
         self.assertNotIn("[[[", str(ctx.exception))
+
+
+class BoundaryPropertyTests(unittest.TestCase):
+    """Seeded, stdlib-only randomized checks around the validator's contracts."""
+
+    SEED = 20261104
+
+    def test_byte_limit_is_exact_for_random_unicode(self):
+        rng = random.Random(self.SEED)
+        alphabet = "aZ09 \u00e7\u011f\u0131\u015f\u20ac\u4e2d\U0001f680"
+        for _ in range(200):
+            text = "".join(rng.choice(alphabet) for _ in range(rng.randint(0, 40)))
+            record = json.dumps({"k": text}, ensure_ascii=False).encode("utf-8")
+            for ending in (b"", b"\n", b"\r\n"):
+                self.assertEqual(count_jsonl(io.BytesIO(record + ending), max_bytes=len(record)), 1)
+                with self.assertRaises(JSONLValidationError):
+                    count_jsonl(io.BytesIO(record + ending), max_bytes=len(record) - 1)
+
+    def test_random_bytes_never_escape_validation_error(self):
+        rng = random.Random(self.SEED + 1)
+        base = b'{"id":1,"name":"workshop","tags":["a","b"],"n":{"x":2.5}}'
+        for _ in range(500):
+            data = bytearray(base)
+            for _ in range(rng.randint(1, 4)):
+                data[rng.randrange(len(data))] = rng.randrange(256)
+            payload = bytes(data) + b"\n"
+            try:
+                count_jsonl(io.BytesIO(payload))
+            except JSONLValidationError as exc:
+                self.assertNotIn("workshop", str(exc))
+                self.assertLess(len(str(exc)), 80)
+
+    def test_nesting_depth_is_accepted_or_rejected_never_crashes(self):
+        for depth in (1, 50, 400, 900, 1500, 5000, 30000):
+            payload = b'{"a":' + b"[" * depth + b"]" * depth + b"}\n"
+            try:
+                self.assertEqual(count_jsonl(io.BytesIO(payload)), 1)
+            except JSONLValidationError as exc:
+                self.assertIn("Line 1", str(exc))
+
+    def test_duplicate_keys_detected_at_random_positions(self):
+        rng = random.Random(self.SEED + 2)
+        for _ in range(100):
+            keys = [f"k{i}" for i in range(rng.randint(2, 8))]
+            dup = rng.choice(keys)
+            pairs = [f'"{k}":{i}' for i, k in enumerate(keys)]
+            pairs.insert(rng.randint(0, len(pairs)), f'"{dup}":99')
+            payload = ("{" + ",".join(pairs) + "}\n").encode()
+            with self.assertRaises(JSONLValidationError):
+                count_jsonl(io.BytesIO(payload))
 
 
 class CLIExitCodeTests(unittest.TestCase):

@@ -71,6 +71,10 @@ def iter_jsonl_records(
                 parse_constant=_reject_json_constant,
                 object_pairs_hook=_reject_duplicate_keys,
             )
+        except RecursionError as exc:
+            raise JSONLValidationError(
+                f"Line {line_number}: JSON nesting is too deep"
+            ) from exc
         except ValueError as exc:
             raise JSONLValidationError(
                 f"Line {line_number}: invalid JSON"

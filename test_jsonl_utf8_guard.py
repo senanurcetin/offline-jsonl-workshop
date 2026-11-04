@@ -115,6 +115,13 @@ class UTF8GuardTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertEqual(json.loads(proc.stdout)["records"], 2)
         self.assertNotIn("workshop", proc.stdout)
+    def test_deeply_nested_json_is_rejected_not_crashed(self):
+        payload = b'{"a":' + b"[" * 30000 + b"]" * 30000 + b"}\n"
+        with self.assertRaises(JSONLValidationError) as ctx:
+            count_jsonl(io.BytesIO(payload))
+        self.assertIn("Line 1", str(ctx.exception))
+        self.assertNotIn("[[[", str(ctx.exception))
+
 
 class CLIExitCodeTests(unittest.TestCase):
     SCRIPT = Path(__file__).with_name("jsonl_utf8_guard.py")
@@ -149,6 +156,13 @@ class CLIExitCodeTests(unittest.TestCase):
         proc = self.run_cli("--max-bytes", "8", stdin=b'{"id":123456}\n')
         self.assertEqual(proc.returncode, 2)
         self.assertEqual(proc.stdout, b"")
+
+    def test_deeply_nested_json_exits_two_without_traceback(self):
+        payload = b'{"a":' + b"[" * 30000 + b"]" * 30000 + b"}\n"
+        proc = self.run_cli(stdin=payload)
+        self.assertEqual(proc.returncode, 2)
+        self.assertEqual(proc.stdout, b"")
+        self.assertNotIn(b"Traceback", proc.stderr)
 
 
 

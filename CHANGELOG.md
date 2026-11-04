@@ -4,6 +4,9 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ## [Unreleased]
 
+### Documentation
+- README (EN/TR): install from PyPI with `pip install jsonl-utf8-guard`; `SHA256SUMS` regenerated for the README change.
+
 ## [0.1.0] - 2026-11-04
 
 ### Added

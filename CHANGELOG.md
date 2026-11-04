@@ -5,6 +5,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 ## [Unreleased]
 
 ### Added
+- Packaging as `jsonl-utf8-guard` (`pyproject.toml`, `jsonl-utf8-guard` console script, no runtime dependencies), a CI job that builds the wheel and runs it from a clean venv, and a PyPI Trusted Publishing release workflow (`docs/RELEASING.md`).
 - Offline SHA-256 release verification CLI (`verify_release.py`) with ZIP verification without extraction and trusted SHA-256 sidecar support.
 - Cross-platform CI (Ubuntu and Windows, Python 3.10/3.12/3.13) and `AGENTS.md` (#6).
 - CLI exit-code and privacy tests (#7).

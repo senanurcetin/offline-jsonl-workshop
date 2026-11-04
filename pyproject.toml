@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jsonl-utf8-guard"
+version = "0.1.0"
+description = "Dependency-free, privacy-safe UTF-8 JSONL validator that never prints input records"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Senanur Çetin" }]
+keywords = ["jsonl", "utf-8", "validation", "privacy", "offline"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Utilities",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/senanurcetin/offline-jsonl-workshop"
+Changelog = "https://github.com/senanurcetin/offline-jsonl-workshop/blob/main/CHANGELOG.md"
+Issues = "https://github.com/senanurcetin/offline-jsonl-workshop/issues"
+
+[project.scripts]
+jsonl-utf8-guard = "jsonl_utf8_guard:main"
+
+[tool.setuptools]
+py-modules = ["jsonl_utf8_guard"]

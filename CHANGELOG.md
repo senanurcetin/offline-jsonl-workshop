@@ -1,8 +1,10 @@
 # Changelog
 
-All notable changes are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). No GitHub Release has been published yet; entries are under "Unreleased" until a version is tagged.
+All notable changes are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+## [0.1.0] - 2026-11-04
 
 ### Added
 - Packaging as `jsonl-utf8-guard` (`pyproject.toml`, `jsonl-utf8-guard` console script, no runtime dependencies), a CI job that builds the wheel and runs it from a clean venv, and a PyPI Trusted Publishing release workflow (`docs/RELEASING.md`).

@@ -116,6 +116,41 @@ class UTF8GuardTests(unittest.TestCase):
         self.assertEqual(json.loads(proc.stdout)["records"], 2)
         self.assertNotIn("workshop", proc.stdout)
 
+class CLIExitCodeTests(unittest.TestCase):
+    SCRIPT = Path(__file__).with_name("jsonl_utf8_guard.py")
+
+    def run_cli(self, *args, stdin=b""):
+        return subprocess.run(
+            [sys.executable, "-B", str(self.SCRIPT), *args],
+            input=stdin, capture_output=True, timeout=10
+        )
+
+    def test_stdin_valid_input_exits_zero(self):
+        proc = self.run_cli(stdin=b'{"id":1}\n{"id":2}\n')
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(json.loads(proc.stdout)["records"], 2)
+
+    def test_invalid_json_exits_two_without_echoing_record(self):
+        proc = self.run_cli(stdin=b'{"secret_token": oops}\n')
+        self.assertEqual(proc.returncode, 2)
+        self.assertEqual(proc.stdout, b"")
+        self.assertNotIn(b"secret_token", proc.stderr)
+
+    def test_missing_input_file_exits_two(self):
+        proc = self.run_cli("--input", "does-not-exist.jsonl")
+        self.assertEqual(proc.returncode, 2)
+        self.assertEqual(proc.stdout, b"")
+
+    def test_non_positive_max_bytes_exits_two(self):
+        proc = self.run_cli("--max-bytes", "0", stdin=b'{"id":1}\n')
+        self.assertEqual(proc.returncode, 2)
+
+    def test_oversized_record_exits_two(self):
+        proc = self.run_cli("--max-bytes", "8", stdin=b'{"id":123456}\n')
+        self.assertEqual(proc.returncode, 2)
+        self.assertEqual(proc.stdout, b"")
+
+
 
 if __name__ == "__main__":
     unittest.main()

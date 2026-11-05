@@ -29,6 +29,8 @@ The `red_green_demo.py` command automatically creates an intentionally buggy cop
 
 Security and scope: No network requests, code execution of user JSON, original-content logging, input modification, or credentials. The example is educational, not a general production parser.
 
+AI-assisted workflow: [a 5-minute tutorial (TR/EN)](docs/AI_WORKFLOW_TUTORIAL_TR_EN.md) walks through the real Claude Code workflow used for the `--version` flag (#8): `AGENTS.md` rules, test first, `SHA256SUMS` update and a PR with an AI-assistance section.
+
 ## Türkçe
 
 Gereksinimler: Python 3.10+; hesap, bulut, API anahtarı veya ek paket gerekmez.
@@ -53,6 +55,8 @@ Temel problem: 🚀 emojisi 1 Unicode karakteri olmasına rağmen UTF-8 ile 4 ba
 `red_green_demo.py` hatalı sürümü geçici bir dizinde oluşturur; regresyon testinin burada **beklenen şekilde başarısız** olduğunu ve orijinal, doğru kodda **başarılı** olduğunu otomatik doğrular. Kaynak dosyanın değiştirilmediğini de SHA-256 ile kontrol eder. Doğrulayıcı JSON nesnelerindeki **tekrarlanan anahtarları**, iç içe ve Unicode escape ile yazılmış olanlar dahil, reddeder; böylece son değerin sessizce öncekinin üzerine yazılması önlenir. Örnek yerel çalışır, dışarı veri göndermez ve dosya içeriğini veya hassas anahtar adlarını çıktıda paylaşmaz.
 
 **Durum:** Atölye içeriği geliştirilmiştir. Gerçek etkinlik, katılımcı, sponsorluk veya program kabulü iddiası yoktur.
+
+AI destekli iş akışı: [5 dakikalık öğretici (TR/EN)](docs/AI_WORKFLOW_TUTORIAL_TR_EN.md), `--version` seçeneği (#8) için kullanılan gerçek Claude Code iş akışını anlatır: `AGENTS.md` kuralları, önce test, `SHA256SUMS` güncellemesi ve AI yardım bölümlü PR.
 
 
 ## Public source and standalone offline package

@@ -1,71 +1,68 @@
 # Red → Green: UTF-8 JSONL Validation Workshop
 
-A small original, dependency-free, offline Python example showing how Unicode characters differ from UTF-8 bytes. Intended as a potential hands-on Claude Code / open-source community workshop. **No workshop or attendance is claimed to have taken place.**
+[![CI](https://github.com/senanurcetin/offline-jsonl-workshop/actions/workflows/ci.yml/badge.svg)](https://github.com/senanurcetin/offline-jsonl-workshop/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/jsonl-utf8-guard.svg)](https://pypi.org/project/jsonl-utf8-guard/)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-## English
+A small, dependency-free, offline Python workshop that shows why a byte limit must count UTF-8 bytes rather than Unicode characters, using a strict JSONL validator and an automated red → green regression demo. Türkçe özet [aşağıda](#türkçe).
 
-Requirements: Python 3.10+; no cloud, API keys, paid services, or extra packages.
+## At a glance
 
-Install the validator from PyPI as a command-line tool (no runtime dependencies):
+- 🚀 is **1** Unicode character but **4** UTF-8 bytes; a limit declared in bytes must check the latter.
+- `jsonl_utf8_guard.py` reads JSONL with a bounded buffer, validates UTF-8 strictly, rejects duplicate object keys (including nested and Unicode-escaped ones) and prints **only the number of JSON objects**, never input records.
+- `red_green_demo.py` proves the regression test catches the bug: it fails on a deliberately broken copy and passes on the real code.
+- `verify_release.py` checks every source file, or a ZIP without extracting it, against `SHA256SUMS`.
+- Python 3.10+ only: no network, packages, cloud services, API keys or credentials.
 
-~~~sh
-pip install jsonl-utf8-guard
-jsonl-utf8-guard --input sample_events.jsonl
-~~~
+## Quick start
 
-Or run it from a clone, without installing anything:
-
-Run from this directory:
-
-~~~powershell
-py -3 jsonl_utf8_guard.py --input sample_events.jsonl
-py -3 -m unittest discover -p "test_*.py" -v
-py -3 red_green_demo.py
-~~~
-
-For a minimal reproducer, compare the character count of the rocket emoji (1) with its UTF-8 byte length (4). A limit expressed in bytes must check the latter. This verifier reads JSONL with a bounded buffer, validates UTF-8 strictly, **rejects ambiguous duplicate object keys (including nested and Unicode-escaped duplicates)**, and emits **only the number of JSON objects**. It does not print any input records.
-
-The `red_green_demo.py` command automatically creates an intentionally buggy copy in a temporary directory, confirms that the targeted regression test fails there, and reruns the same test against the original corrected code. It verifies that the working source was never modified. You can also inspect the two implementations manually in a disposable copy.
-
-Security and scope: No network requests, code execution of user JSON, original-content logging, input modification, or credentials. The example is educational, not a general production parser.
-
-AI-assisted workflow: [a 5-minute tutorial (TR/EN)](https://github.com/senanurcetin/offline-jsonl-workshop/blob/main/docs/AI_WORKFLOW_TUTORIAL_TR_EN.md) walks through the real Claude Code workflow used for the `--version` flag (#8): `AGENTS.md` rules, test first, `SHA256SUMS` update and a PR with an AI-assistance section.
-
-## Türkçe
-
-Gereksinimler: Python 3.10+; hesap, bulut, API anahtarı veya ek paket gerekmez.
-
-Doğrulayıcıyı PyPI'den komut satırı aracı olarak kurabilirsiniz (çalışma zamanı bağımlılığı yoktur):
+From PyPI:
 
 ~~~sh
 pip install jsonl-utf8-guard
 jsonl-utf8-guard --input sample_events.jsonl
 ~~~
 
-Ya da hiçbir şey kurmadan klonlanmış depodan çalıştırın:
+From a clone, with nothing installed:
 
 ~~~powershell
 py -3 jsonl_utf8_guard.py --input sample_events.jsonl
 py -3 -m unittest discover -p "test_*.py" -v
 py -3 red_green_demo.py
+py -3 verify_release.py
 ~~~
 
-Temel problem: 🚀 emojisi 1 Unicode karakteri olmasına rağmen UTF-8 ile 4 bayt yer kaplar. Eğer bir akış işleyici boyut sınırını bayt cinsinden ilan ediyorsa karakter sayısını değil gerçek bayt sayısını kontrol etmelidir.
+## Details
 
-`red_green_demo.py` hatalı sürümü geçici bir dizinde oluşturur; regresyon testinin burada **beklenen şekilde başarısız** olduğunu ve orijinal, doğru kodda **başarılı** olduğunu otomatik doğrular. Kaynak dosyanın değiştirilmediğini de SHA-256 ile kontrol eder. Doğrulayıcı JSON nesnelerindeki **tekrarlanan anahtarları**, iç içe ve Unicode escape ile yazılmış olanlar dahil, reddeder; böylece son değerin sessizce öncekinin üzerine yazılması önlenir. Örnek yerel çalışır, dışarı veri göndermez ve dosya içeriğini veya hassas anahtar adlarını çıktıda paylaşmaz.
+### Red → green demo
 
-**Durum:** Atölye içeriği geliştirilmiştir. Gerçek etkinlik, katılımcı, sponsorluk veya program kabulü iddiası yoktur.
+`red_green_demo.py` creates an intentionally buggy copy in a temporary directory, confirms that the targeted regression test fails there, then reruns the same test against the corrected code. It checks with SHA-256 that the working source was never modified. You can also compare the two implementations by hand in a disposable copy.
 
-AI destekli iş akışı: [5 dakikalık öğretici (TR/EN)](https://github.com/senanurcetin/offline-jsonl-workshop/blob/main/docs/AI_WORKFLOW_TUTORIAL_TR_EN.md), `--version` seçeneği (#8) için kullanılan gerçek Claude Code iş akışını anlatır: `AGENTS.md` kuralları, önce test, `SHA256SUMS` güncellemesi ve AI yardım bölümlü PR.
+### Verifying the files
 
+`py -3 verify_release.py` validates every expected file against `SHA256SUMS`. It rejects malformed, duplicate, unexpected or path-traversal manifest entries, detects changed or missing files, and never prints file contents. `.gitattributes` keeps the manifest-verified bytes identical on Windows, macOS and Linux.
 
-## Public source and standalone offline package
+A workshop ZIP can be checked **without extraction**:
 
-This workshop is independently authored example material, **not** an official Anthropic product, partnership, certification, or an Anthropic-maintained repository. The source is provided under the MIT license in `LICENSE`. No workshop has been hosted.
+~~~powershell
+py -3 verify_release.py --archive "path\to\offline-jsonl-workshop.zip"
+~~~
 
-The original development workspace contains a separate release builder (`prepare_workshop_release.py`) that packages this workshop reproducibly from an explicit allowlist. The builder is not required to use the extracted archive. The archive contains this README, bilingual runbook, sample, license, three scripts, three test modules, and a `SHA256SUMS` manifest. It excludes backups, credentials and local handoff files.
+This checks the exact expected members, rejects duplicate, unsafe, symlinked, encrypted, oversized or missing entries, and verifies source bytes against the bundled `SHA256SUMS` without running archive contents.
 
-After extracting the ZIP into its own directory:
+To authenticate a download, also check the full ZIP hash obtained from a trusted independent channel, either directly or from a sidecar file:
+
+~~~powershell
+py -3 verify_release.py --archive "path\to\offline-jsonl-workshop.zip" --expected-archive-sha256 "<trusted_64_character_lowercase_sha256>"
+py -3 verify_release.py --archive "offline-jsonl-workshop.zip" --trusted-sha256-file "offline-jsonl-workshop.zip.sha256"
+~~~
+
+The tool hashes the exact bytes it then parses and rejects malformed or mismatched hashes; `--archive` is required. The sidecar must hold a single LF- or CRLF-terminated record in the format `<64 lowercase hex digits>  workshop.zip` with a matching ZIP filename; oversized, malformed or symlinked sidecars are rejected. The two options cannot be combined.
+
+### Offline package
+
+A separate release builder in the original development workspace (`prepare_workshop_release.py`, not needed to use the archive) packages the workshop from an explicit allowlist: this README, the bilingual runbook ([`WORKSHOP_RUNBOOK_TR_EN.md`](WORKSHOP_RUNBOOK_TR_EN.md)), the sample, the license, three scripts, three test modules and `SHA256SUMS`, without backups, credentials or local handoff files. Rebuilding from the same source bytes gives the same ZIP hash, and a SHA-256 sidecar is written beside the ZIP. After extracting it into its own directory:
 
 ~~~powershell
 py -3 -m unittest discover -p "test_*.py" -q
@@ -74,98 +71,47 @@ py -3 red_green_demo.py
 py -3 jsonl_utf8_guard.py --input sample_events.jsonl
 ~~~
 
-Rebuilding the package with the same source bytes produces the same ZIP hash. A SHA-256 sidecar is emitted beside the ZIP. Public repository: https://github.com/senanurcetin/offline-jsonl-workshop. The reusable offline ZIP can be built locally; it is not claimed as a published GitHub Release. Git checkouts preserve source bytes for the accompanying `SHA256SUMS` manifest via `.gitattributes`.
+### AI-assisted workflow
 
-### Public repository integrity check
+A [5-minute tutorial (TR/EN)](https://github.com/senanurcetin/offline-jsonl-workshop/blob/main/docs/AI_WORKFLOW_TUTORIAL_TR_EN.md) walks through the Claude Code workflow used for the `--version` flag (#8): `AGENTS.md` rules, test first, `SHA256SUMS` update and a PR with an AI-assistance section.
 
-After cloning the public repository, or extracting the offline ZIP, run `py -3 verify_release.py` in the project directory. This local, dependency-free command validates every expected file against `SHA256SUMS`. It rejects malformed, duplicate, unexpected or path-traversal manifest entries, detects changed or missing source files, and does not reveal source contents. Git's `.gitattributes` preserves the manifest-verified bytes on Windows, macOS and Linux.
+## Limitations
 
-### Türkçe — Yayımlanan dosyaları doğrulama
+- **Educational, not a production parser.** It does no network requests, never executes or logs input JSON, and never modifies input, but it is not a general-purpose JSON library.
+- **Integrity is not authenticity.** The bundled `SHA256SUMS` proves only that a ZIP is self-consistent; an attacker who replaces the files and the manifest gets another consistent ZIP. A hash or sidecar downloaded from the same untrusted location proves nothing about the publisher, and no release signature or trusted checksum channel is provided.
+- **No published workshop ZIP.** The offline package is built locally; it is not attached to a GitHub release.
+- **Independent material.** This is not an official Anthropic product, partnership, certification or Anthropic-maintained repository, and no workshop, attendance, sponsorship or program acceptance is claimed.
 
-GitHub deposunu klonladıktan veya ZIP paketini çıkardıktan sonra proje klasöründe `py -3 verify_release.py` komutunu çalıştır. Araç, beklenen tüm kaynak dosyalarını `SHA256SUMS` ile karşılaştırır; değiştirilmiş veya eksik dosyaları, hatalı veya yinelenmiş manifest kayıtlarını ve klasör dışına erişim girişimlerini reddeder. Ek paket veya ağ bağlantısı gerekmez; dosya içeriği ekrana yazdırılmaz.
+## Türkçe
 
+Bayt sınırının neden Unicode karakter sayısıyla değil UTF-8 bayt sayısıyla kontrol edilmesi gerektiğini gösteren, bağımlılıksız ve çevrimdışı bir Python atölyesi.
 
-### Verify the ZIP without extracting it (English)
+- 🚀 emojisi 1 Unicode karakteridir ama UTF-8 ile 4 bayt yer kaplar. Boyut sınırı bayt cinsinden ilan edildiyse gerçek bayt sayısı kontrol edilmelidir.
+- Doğrulayıcı UTF-8'i katı biçimde denetler, iç içe ve Unicode escape ile yazılmış olanlar dahil **tekrarlanan anahtarları** reddeder (böylece son değer öncekinin üzerine sessizce yazılmaz) ve yalnızca nesne sayısını yazdırır; dosya içeriğini veya hassas anahtar adlarını paylaşmaz.
+- `red_green_demo.py` hatalı sürümü geçici bir dizinde oluşturur, regresyon testinin orada **başarısız**, doğru kodda **başarılı** olduğunu otomatik doğrular ve kaynak dosyanın değişmediğini SHA-256 ile kontrol eder.
+- Gereksinimler: Python 3.10+; hesap, bulut, API anahtarı veya ek paket gerekmez.
 
-The verifier can inspect a local workshop ZIP **without extraction**:
+Kurulum ve çalıştırma:
 
-~~~powershell
-py -3 verify_release.py --archive "path\to\offline-jsonl-workshop.zip"
+~~~sh
+pip install jsonl-utf8-guard
+jsonl-utf8-guard --input sample_events.jsonl
 ~~~
 
-This checks the exact expected members, rejects duplicate, unsafe, symlinked, encrypted, oversized or missing ZIP entries, and verifies source bytes against the bundled SHA256SUMS. It performs no network requests and does not execute archive contents.
-
-**Integrity is not authenticity:** An attacker who replaces both files *and* the included manifest could produce another self-consistent ZIP. To authenticate a download, also compare the full ZIP SHA-256 against a checksum obtained from a trusted independent channel. This repository does not claim a published ZIP release.
-
-### ZIP paketini çıkarmadan doğrula (Türkçe)
-
-Bir ZIP dosyasının içeriğini klasöre açmadan kontrol etmek için:
+Ya da hiçbir şey kurmadan klonlanmış depodan:
 
 ~~~powershell
-py -3 verify_release.py --archive "path\to\offline-jsonl-workshop.zip"
+py -3 jsonl_utf8_guard.py --input sample_events.jsonl
+py -3 -m unittest discover -p "test_*.py" -v
+py -3 red_green_demo.py
 ~~~
 
-Bu işlem ZIP içindeki beklenen dosyaları ve SHA256SUMS değerlerini doğrular; yinelenen, eksik, güvensiz, sembolik bağlantılı ve aşırı büyük kayıtları reddeder. Ağ bağlantısı veya ZIP içindeki kodun çalıştırılması gerekmez.
+**Dosyaları doğrulama.** Depoyu klonladıktan veya ZIP paketini çıkardıktan sonra `py -3 verify_release.py` çalıştırın. Araç tüm kaynak dosyalarını `SHA256SUMS` ile karşılaştırır; değiştirilmiş veya eksik dosyaları, hatalı veya yinelenmiş manifest kayıtlarını ve klasör dışına erişim girişimlerini reddeder. ZIP'i açmadan kontrol etmek için `--archive "path\to\offline-jsonl-workshop.zip"` kullanın; yinelenen, eksik, güvensiz, sembolik bağlantılı ve aşırı büyük kayıtlar reddedilir, ZIP içindeki kod çalıştırılmaz. ZIP'in tam SHA-256 değerini bağımsız ve güvenilir bir kaynaktan aldıysanız `--expected-archive-sha256 "<guvenilir_64_karakter_kucuk_harf_sha256>"` veya `--trusted-sha256-file` ile ayrıca kontrol edin; yan dosya Windows CRLF ve Linux LF satır sonlarını destekler.
 
-**Bütünlük, kaynak kimliğini kanıtlamaz:** Dosyalarla birlikte manifest de değiştirilmişse sahte bir paket kendi içinde tutarlı görünebilir. Gerçek kaynağı doğrulamak için ZIP dosyasının SHA-256 değerini ayrıca güvenilir bir kanaldan alınan değerle karşılaştırın.
+**Sınırlamalar.** Örnek eğitim amaçlıdır, genel bir üretim ayrıştırıcısı değildir. Paket içindeki `SHA256SUMS` yalnızca iç tutarlılığı gösterir, yayıncının kimliğini kanıtlamaz; ZIP ile aynı güvenilmeyen kaynaktan gelen hash veya yan dosya da kanıtlamaz. Atölye bağımsız olarak hazırlanmıştır; gerçek etkinlik, katılımcı, sponsorluk veya program kabulü iddiası yoktur.
 
+AI destekli iş akışı: [5 dakikalık öğretici (TR/EN)](https://github.com/senanurcetin/offline-jsonl-workshop/blob/main/docs/AI_WORKFLOW_TUTORIAL_TR_EN.md), `--version` seçeneği (#8) için kullanılan Claude Code iş akışını anlatır: `AGENTS.md` kuralları, önce test, `SHA256SUMS` güncellemesi ve AI yardım bölümlü PR.
 
-### Independently trusted ZIP SHA-256 (English)
+## License
 
-Checking the hash manifest inside a ZIP proves internal consistency, not
-the identity of the publisher. For stronger verification, get the **complete
-ZIP file's SHA-256** from a trusted independent channel, and pass that value
-explicitly alongside the local ZIP path:
-
-~~~powershell
-py -3 verify_release.py --archive "path\to\offline-jsonl-workshop.zip" --expected-archive-sha256 "<trusted_64_character_lowercase_sha256>"
-~~~
-
-The tool verifies the **exact bytes it subsequently parses**, then validates
-the internal allowlisted source checksums. It rejects malformed and mismatched
-trusted hashes, requires the --archive flag, and does not use an internet connection.
-A checksum supplied by the same untrusted download location does **not** by
-itself prove publisher authenticity. No release signature or externally
-trusted checksum distribution is claimed by this project.
-
-### Haricî güvenilir ZIP SHA-256 kontrolü (Türkçe)
-
-ZIP içindeki SHA256SUMS dosyasının doğrulanması, paketin yalnızca kendi
-içinde tutarlı olduğunu gösterir. Paketin tam SHA-256 değerini **bağımsız ve
-güvenilir bir kaynaktan** elde ettiğinizde bunu ayrıca kullanabilirsiniz:
-
-~~~powershell
-py -3 verify_release.py --archive "path\to\offline-jsonl-workshop.zip" --expected-archive-sha256 "<guvenilir_64_karakter_kucuk_harf_sha256>"
-~~~
-
-Bu kontrol, arşivin tüm baytlarını güvenilir değerle karşılaştırır ve ardından
-içerik manifestini doğrular. Hatalı hash biçimi veya uyuşmayan değer reddedilir.
-İnternet, ücretli servis veya arşivi açıp içindeki kodu çalıştırmak gerekmez.
-ZIP ve doğrulama değeri aynı güvenilmeyen kaynaktan alındıysa işlem tek başına
-kaynağın özgünlüğünü kanıtlamaz.
-
-
-### Trusted SHA-256 sidecar file (English)
-
-A local release builder may produce a `workshop.zip.sha256` file containing
-the exact format `<64 lowercase hex digits>  workshop.zip`. When the checksum
-file comes from an **independently trusted channel**, verify the ZIP without
-copying the hash manually:
-
-```powershell
-py -3 verify_release.py --archive "offline-jsonl-workshop.zip" --trusted-sha256-file "offline-jsonl-workshop.zip.sha256"
-```
-
-The reader accepts a single LF or CRLF-terminated record, verifies the ZIP
-filename, rejects oversized or malformed checksum files and symlinks, and
-uses the same bounded archive verification. This option cannot be combined
-with `--expected-archive-sha256`. **A sidecar downloaded alongside an
-untrusted ZIP does not independently authenticate its publisher.**
-
-### Güvenilir SHA-256 yan dosyası (Türkçe)
-
-ZIP'in SHA-256 değerini içeren bir `.sha256` dosyasını **bağımsız ve güvenilir
-bir kaynaktan** aldıysanız `--trusted-sha256-file` seçeneğiyle kullanabilirsiniz.
-Araç, ZIP dosya adını ve SHA-256 biçimini denetler; Windows CRLF ve Linux LF
-satır sonlarını destekler. ZIP ile aynı güvenilmeyen kaynaktan indirilen yan
-dosya, tek başına yayıncının kimliğini kanıtlamaz.
+[MIT](LICENSE)

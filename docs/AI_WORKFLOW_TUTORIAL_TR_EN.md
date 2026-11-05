@@ -60,7 +60,7 @@ git diff --check       -> CRLF satırlarında "trailing whitespace"
 
 ### 7. AI yardım bölümüyle PR (≈30 sn)
 
-PR [#28](https://github.com/senanurcetin/offline-jsonl-workshop/pull/28) depo şablonunu kullanır. `Closes #8` içerir. Kırmızı ve yeşil çıktılarını, kontrolleri ve "AI assistance" bölümünü gösterir: araç Claude Code (Claude Opus 5.5), yerel oturum (paylaşılabilir bağlantı yok), istem özeti, Codex kullanılmadığı bilgisi ve insan incelemesi gerektiği notu. [`docs/AI_ASSISTANCE_LOG.md`](AI_ASSISTANCE_LOG.md) dosyasına bir satır eklendi. Barındırılan CI, PR #28 üzerinde 8 işin tamamını geçti (Ubuntu/Windows × Python 3.10/3.12/3.13 testleri, `mypy --strict` dahil `quality` ve `package`). PR birleştirilmedi; birleştirme kararı depo sahibine aittir.
+PR [#28](https://github.com/senanurcetin/offline-jsonl-workshop/pull/28) depo şablonunu kullanır. `Closes #8` içerir. Kırmızı ve yeşil çıktılarını, kontrolleri ve "AI assistance" bölümünü gösterir: araç Claude Code (Claude Opus 5.5), yerel oturum (paylaşılabilir bağlantı yok), istem özeti, Codex kullanılmadığı bilgisi ve insan incelemesi gerektiği notu. [`docs/AI_ASSISTANCE_LOG.md`](AI_ASSISTANCE_LOG.md) dosyasına bir satır eklendi. Barındırılan CI, PR #28 üzerinde 8 işin tamamını geçti (Ubuntu/Windows × Python 3.10/3.12/3.13 testleri, `mypy --strict` dahil `quality` ve `package`). Depo sahibi PR'ı inceledikten sonra birleştirdi (`bcd9e37`) ve #8 kapandı.
 
 ## English
 
@@ -119,7 +119,7 @@ The `git diff --check` warning isn't a real whitespace error. `-text` in `.gitat
 
 ### 7. PR with an AI-assistance section (≈30 s)
 
-PR [#28](https://github.com/senanurcetin/offline-jsonl-workshop/pull/28) uses the repository template. It contains `Closes #8`. It shows the red and green output, the checks, and an "AI assistance" section: the tool was Claude Code (Claude Opus 5.5), the session was local (no shareable link), a summary of the prompt, a note that Codex was not used, and a note that a human should review it. A row was added to [`docs/AI_ASSISTANCE_LOG.md`](AI_ASSISTANCE_LOG.md). Hosted CI passed all 8 jobs on PR #28: the Ubuntu/Windows × Python 3.10/3.12/3.13 tests, `quality` (including `mypy --strict`) and `package`. The PR was not merged; that decision belongs to the repository owner.
+PR [#28](https://github.com/senanurcetin/offline-jsonl-workshop/pull/28) uses the repository template. It contains `Closes #8`. It shows the red and green output, the checks, and an "AI assistance" section: the tool was Claude Code (Claude Opus 5.5), the session was local (no shareable link), a summary of the prompt, a note that Codex was not used, and a note that a human should review it. A row was added to [`docs/AI_ASSISTANCE_LOG.md`](AI_ASSISTANCE_LOG.md). Hosted CI passed all 8 jobs on PR #28: the Ubuntu/Windows × Python 3.10/3.12/3.13 tests, `quality` (including `mypy --strict`) and `package`. The repository owner merged it after review (`bcd9e37`), which closed #8.
 
 ## Integrity checklist
 

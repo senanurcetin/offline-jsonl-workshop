@@ -12,6 +12,10 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, BinaryIO
 
+# Keep in sync with [project].version in pyproject.toml (enforced by a unit test).
+# A constant, not importlib.metadata, so the script also works from a clone or ZIP.
+__version__ = "0.1.0"
+
 DEFAULT_MAX_BYTES = 65_536
 
 
@@ -94,6 +98,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, help="Input file; omit for stdin")
     parser.add_argument("--max-bytes", type=int, default=DEFAULT_MAX_BYTES)
+    parser.add_argument(
+        "--version", action="version", version=f"jsonl_utf8_guard {__version__}"
+    )
     args = parser.parse_args(argv)
     try:
         if args.input is None:

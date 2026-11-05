@@ -4,6 +4,9 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ## [Unreleased]
 
+### Added
+- `--version` flag for `jsonl_utf8_guard.py` and the `jsonl-utf8-guard` console script: prints one line (`jsonl_utf8_guard 0.1.0`) and exits 0 without reading stdin or `--input`. The version is a `__version__` constant kept equal to `pyproject.toml` by a unit test; 7 new CLI tests; `SHA256SUMS` regenerated (#8).
+
 ### Documentation
 - README (EN/TR): install from PyPI with `pip install jsonl-utf8-guard`; `SHA256SUMS` regenerated for the README change.
 

@@ -12,7 +12,7 @@ Releases go to PyPI through [Trusted Publishing](https://docs.pypi.org/trusted-p
 
 ## Each release
 
-1. Bump `version` in `pyproject.toml` and move the `Unreleased` entries in `CHANGELOG.md` under the new version. Merge this through a PR with green CI.
+1. Bump `version` in `pyproject.toml` and `__version__` in `jsonl_utf8_guard.py` (a unit test fails if they differ; regenerate `SHA256SUMS`), and move the `Unreleased` entries in `CHANGELOG.md` under the new version. Merge this through a PR with green CI.
 2. Create a GitHub Release with tag `vX.Y.Z`. The tag must match the version; the workflow checks this.
 3. `release.yml` runs the tests and `verify_release.py`, builds the sdist and wheel, and publishes them.
 

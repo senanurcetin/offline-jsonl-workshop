@@ -1,14 +1,17 @@
 """Network-free regression tests for the JSONL UTF-8 workshop example."""
 from __future__ import annotations
 
+import contextlib
 import io
 import json
 import random
+import re
 import subprocess
 import sys
 import unittest
 from pathlib import Path
 
+import jsonl_utf8_guard
 from jsonl_utf8_guard import DEFAULT_MAX_BYTES, JSONLValidationError, count_jsonl, iter_jsonl_records
 
 
@@ -451,6 +454,67 @@ class CLIExitCodeTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 2)
         self.assertEqual(proc.stdout, b"")
         self.assertNotIn(b"Traceback", proc.stderr)
+
+    def expected_version_line(self):
+        return f"jsonl_utf8_guard {jsonl_utf8_guard.__version__}"
+
+    def test_version_prints_one_line_and_exits_zero(self):
+        proc = self.run_cli("--version")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(proc.stderr, b"")
+        lines = proc.stdout.decode("ascii").splitlines()
+        self.assertEqual(lines, [self.expected_version_line()])
+
+    def test_version_matches_pyproject(self):
+        pyproject = Path(__file__).with_name("pyproject.toml")
+        if not pyproject.exists():
+            self.skipTest("pyproject.toml is not part of the standalone package")
+        text = pyproject.read_text(encoding="utf-8")
+        project = text.split("[project]", 1)[1].split("\n[", 1)[0]
+        match = re.search(r'^version = "([^"]+)"$', project, re.MULTILINE)
+        self.assertIsNotNone(match)
+        self.assertEqual(jsonl_utf8_guard.__version__, match.group(1))
+
+    def test_version_does_not_read_or_echo_stdin(self):
+        proc = self.run_cli("--version", stdin=b'{"secret_token": "s3cr3t"}\n{oops\n')
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(proc.stdout.decode("ascii").splitlines(), [self.expected_version_line()])
+        self.assertNotIn(b"s3cr3t", proc.stdout + proc.stderr)
+        self.assertNotIn(b"records", proc.stdout)
+
+    def test_version_works_without_stdin(self):
+        proc = subprocess.run(
+            [sys.executable, "-B", str(self.SCRIPT), "--version"],
+            stdin=subprocess.DEVNULL, capture_output=True, timeout=10
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(proc.stdout.decode("ascii").splitlines(), [self.expected_version_line()])
+
+    def test_version_works_with_closed_stdin(self):
+        closed = io.TextIOWrapper(io.BytesIO(b'{"id":1}\n'))
+        closed.close()
+        out = io.StringIO()
+        original_stdin = sys.stdin
+        sys.stdin = closed
+        try:
+            with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as ctx:
+                jsonl_utf8_guard.main(["--version"])
+        finally:
+            sys.stdin = original_stdin
+        self.assertEqual(ctx.exception.code, 0)
+        self.assertEqual(out.getvalue().splitlines(), [self.expected_version_line()])
+
+    def test_version_does_not_open_input_file(self):
+        proc = self.run_cli("--input", "does-not-exist.jsonl", "--version")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(proc.stdout.decode("ascii").splitlines(), [self.expected_version_line()])
+
+    def test_version_wins_over_other_valid_options_like_argparse(self):
+        for args in (("--version", "--max-bytes", "0"), ("--max-bytes", "0", "--version")):
+            with self.subTest(args=args):
+                proc = self.run_cli(*args, stdin=b'{"id":1}\n')
+                self.assertEqual(proc.returncode, 0, proc.stderr)
+                self.assertEqual(proc.stdout.decode("ascii").splitlines(), [self.expected_version_line()])
 
 
 

@@ -7,6 +7,9 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 ### Added
 - `--version` flag for `jsonl_utf8_guard.py` and the `jsonl-utf8-guard` console script: prints one line (`jsonl_utf8_guard 0.1.0`) and exits 0 without reading stdin or `--input`. The version is a `__version__` constant kept equal to `pyproject.toml` by a unit test; 7 new CLI tests; `SHA256SUMS` regenerated (#8).
 
+### Fixed
+- A file starting with a UTF-8 byte order mark is still rejected, but the error now says so (`Line 1: starts with a UTF-8 byte order mark (BOM)`) instead of a generic `invalid JSON` (#31).
+
 ### Documentation
 - `docs/AI_WORKFLOW_TUTORIAL_TR_EN.md`: a 5-minute TR/EN tutorial on the real Claude Code workflow used for #8, linked from the README; `SHA256SUMS` regenerated for the README change (#16).
 - README (EN/TR): install from PyPI with `pip install jsonl-utf8-guard`; `SHA256SUMS` regenerated for the README change.

@@ -17,6 +17,7 @@ from typing import Any, BinaryIO
 __version__ = "0.1.0"
 
 DEFAULT_MAX_BYTES = 65_536
+UTF8_BOM = b"\xef\xbb\xbf"
 
 
 class JSONLValidationError(ValueError):
@@ -63,6 +64,10 @@ def iter_jsonl_records(
             )
         if not payload.strip():
             continue
+        if line_number == 1 and payload.startswith(UTF8_BOM):
+            raise JSONLValidationError(
+                "Line 1: starts with a UTF-8 byte order mark (BOM)"
+            )
         try:
             text = payload.decode("utf-8", errors="strict")
         except UnicodeDecodeError as exc:

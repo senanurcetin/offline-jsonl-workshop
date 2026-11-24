@@ -2,6 +2,10 @@
 
 This is an independent, MIT-licensed, offline Python 3.10+ educational example, not an Anthropic-owned repository or official Claude event.
 
+## New here?
+
+Issues labelled [`good first issue`](https://github.com/senanurcetin/offline-jsonl-workshop/labels/good%20first%20issue) are small, well-scoped and a good place to start; [`help wanted`](https://github.com/senanurcetin/offline-jsonl-workshop/labels/help%20wanted) marks larger ones where help is welcome. Comment on the issue before you start so work isn't duplicated, and ask questions in [Discussions](https://github.com/senanurcetin/offline-jsonl-workshop/discussions). Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Select useful work
 
 Please examine [open issues](https://github.com/senanurcetin/offline-jsonl-workshop/issues) and [open PRs](https://github.com/senanurcetin/offline-jsonl-workshop/pulls) before coding. Useful contributions improve a reproducible behavior defect, input/ZIP safety, test reliability, cross-platform behavior, accessibility or bilingual accuracy. For ambiguous behavior, propose intended semantics in an issue first. Do not send artificial, duplicate or contribution-count-farming PRs.

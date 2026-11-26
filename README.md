@@ -101,6 +101,7 @@ Thanks to everyone who has improved this workshop:
 - [@rise11hx-cmyk](https://github.com/rise11hx-cmyk): `--max-bytes` rejected as a usage error (#41), named messages for duplicate keys and non-finite numbers (#40), and `--report-all` (#33), released in v0.3.0.
 - [@jwalith4418-Mj](https://github.com/jwalith4418-Mj): non-object records name their JSON type without echoing the value (#47), released in v0.3.0.
 - [@ashenthefox](https://github.com/ashenthefox): a clear, cross-platform error when `--input` is a directory (#67).
+- [@Daytonrad](https://github.com/Daytonrad): `--input -` reads standard input, while `./-` still opens a file named `-` (#68).
 
 Want to join them? Issues labelled [good first issue](https://github.com/senanurcetin/offline-jsonl-workshop/issues?q=is%3Aopen+label%3A%22good+first+issue%22) have a reproduction and a definition of done, and questions are welcome in [Discussions](https://github.com/senanurcetin/offline-jsonl-workshop/discussions). See [CONTRIBUTING.md](CONTRIBUTING.md).
 

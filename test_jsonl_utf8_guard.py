@@ -327,6 +327,38 @@ class ReportAllTests(unittest.TestCase):
         self.assertTrue(report["truncated"])
         self.assertEqual(report["records"], 0)
 
+    def test_cli_max_errors_limits_the_report_all_list(self):
+        """#63: --max-errors N caps the --report-all list at N."""
+        with tempfile.TemporaryDirectory() as folder:
+            path = self._write(folder, "five.jsonl", b'{"a":1}\n' + b"[1]\n" * 5)
+            proc = self._run_cli(
+                "--input", path, "--report-all", "--max-errors", "2"
+            )
+        self.assertEqual(proc.returncode, 2, proc.stderr)
+        report = json.loads(proc.stdout)
+        self.assertEqual([error["line"] for error in report["errors"]], [2, 3])
+        self.assertTrue(report["truncated"])
+        self.assertEqual(report["records"], 1)
+
+    def test_cli_max_errors_rejects_zero_and_needs_report_all(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = self._write(folder, "ok.jsonl", b'{"a":1}\n')
+            for args, message in (
+                (
+                    ("--report-all", "--max-errors", "0"),
+                    "argument --max-errors: must be a positive integer, got 0",
+                ),
+                (
+                    ("--max-errors", "5"),
+                    "argument --max-errors: only applies with --report-all",
+                ),
+            ):
+                with self.subTest(args=args):
+                    proc = self._run_cli("--input", path, *args)
+                    self.assertEqual(proc.returncode, 2)
+                    self.assertIn(message, proc.stderr)
+                    self.assertEqual(proc.stdout, "")
+
 
 class BoundaryPropertyTests(unittest.TestCase):
     """Seeded, stdlib-only randomized checks around the validator's contracts."""

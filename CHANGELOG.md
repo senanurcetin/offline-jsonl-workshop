@@ -4,6 +4,9 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ## [Unreleased]
 
+### Added
+- `--max-errors N` for `jsonl_utf8_guard.py --report-all`: lists at most `N` errors instead of 100 (`"truncated": true` still marks a longer list, exit code stays `2`). `N` must be a positive integer, and the option is a usage error without `--report-all` (#63).
+
 ## [0.3.0] - 2026-11-20
 
 ### Added

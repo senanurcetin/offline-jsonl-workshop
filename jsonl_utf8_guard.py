@@ -249,7 +249,10 @@ def _report_for(source: BinaryIO, args: argparse.Namespace) -> dict[str, Any]:
     """Scan one already-open source and build the JSON report."""
     if not args.report_all:
         return _ok_report(count_jsonl(source, max_bytes=args.max_bytes), args.max_bytes)
-    records, errors, truncated = scan_jsonl(source, max_bytes=args.max_bytes)
+    max_errors = getattr(args, "max_errors", None) or MAX_REPORTED_ERRORS
+    records, errors, truncated = scan_jsonl(
+        source, max_bytes=args.max_bytes, max_errors=max_errors
+    )
     if errors:
         return _invalid_report(records, errors, truncated, args.max_bytes)
     return _ok_report(records, args.max_bytes)
@@ -277,9 +280,17 @@ def main(argv: list[str] | None = None) -> int:
         help="report every invalid line instead of stopping at the first one",
     )
     parser.add_argument(
+        "--max-errors",
+        type=_positive_int,
+        metavar="N",
+        help=f"with --report-all, list at most N errors (default {MAX_REPORTED_ERRORS})",
+    )
+    parser.add_argument(
         "--version", action="version", version=f"jsonl_utf8_guard {__version__}"
     )
     args = parser.parse_args(argv)
+    if args.max_errors is not None and not args.report_all:
+        parser.error("argument --max-errors: only applies with --report-all")
     try:
         report = _build_report(args)
     except (OSError, ValueError) as exc:

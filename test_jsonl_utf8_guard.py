@@ -629,16 +629,28 @@ class BoundaryEdgeCaseTests(unittest.TestCase):
 class CLIExitCodeTests(unittest.TestCase):
     SCRIPT = Path(__file__).with_name("jsonl_utf8_guard.py")
 
-    def run_cli(self, *args, stdin=b""):
+    def run_cli(self, *args, stdin=b"", cwd=None):
         return subprocess.run(
             [sys.executable, "-B", str(self.SCRIPT), *args],
-            input=stdin, capture_output=True, timeout=10
+            input=stdin, capture_output=True, timeout=10, cwd=cwd
         )
 
     def test_stdin_valid_input_exits_zero(self):
         proc = self.run_cli(stdin=b'{"id":1}\n{"id":2}\n')
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertEqual(json.loads(proc.stdout)["records"], 2)
+
+    def test_input_dash_reads_stdin(self):
+        proc = self.run_cli("--input", "-", stdin=b'{"id":1}\n{"id":2}\n')
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(json.loads(proc.stdout)["records"], 2)
+
+    def test_dot_slash_dash_reads_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            (Path(directory) / "-").write_bytes(b'{"id":1}\n')
+            proc = self.run_cli("--input", "./-", cwd=directory)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(json.loads(proc.stdout)["records"], 1)
 
     def test_invalid_json_exits_two_without_echoing_record(self):
         proc = self.run_cli(stdin=b'{"secret_token": oops}\n')

@@ -256,17 +256,20 @@ def _report_for(source: BinaryIO, args: argparse.Namespace) -> dict[str, Any]:
 
 
 def _build_report(args: argparse.Namespace) -> dict[str, Any]:
-    if args.input is None:
+    if args.input is None or args.input == "-":
         return _report_for(sys.stdin.buffer, args)
-    if args.input.is_dir():
+    path = Path(args.input)
+    if path.is_dir():
         raise ValueError("--input is a directory, not a file")
-    with args.input.open("rb") as source:
+    with path.open("rb") as source:
         return _report_for(source, args)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, help="Input file; omit for stdin")
+    parser.add_argument(
+        "--input", help="Input file; omit or use - for stdin. Use ./- for a file named -."
+    )
     parser.add_argument("--max-bytes", type=_positive_int, default=DEFAULT_MAX_BYTES)
     parser.add_argument(
         "--report-all",
